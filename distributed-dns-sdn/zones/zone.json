@@ -1,0 +1,18 @@
+{
+  "example.com":   {"ip": "10.0.0.10", "ttl": 60},
+  "college.local": {"ip": "10.0.0.20", "ttl": 60},
+  "server.local":  {"ip": "10.0.0.30", "ttl": 60},
+  "library.local": {"ip": "10.0.0.40", "ttl": 30},
+  "backup.local":  {"ip": "10.0.0.50", "ttl": 30},
+  "mail.local":    {"ip": "10.0.1.10", "ttl": 120},
+  "web.local":     {"ip": "10.0.1.20", "ttl": 120},
+  "db.local":      {"ip": "10.0.1.30", "ttl": 120},
+  "lab1.local":    {"ip": "10.0.2.1",  "ttl": 20},
+  "lab2.local":    {"ip": "10.0.2.2",  "ttl": 20},
+  "lab3.local":    {"ip": "10.0.2.3",  "ttl": 20},
+  "lab4.local":    {"ip": "10.0.2.4",  "ttl": 20},
+  "portal.local":  {"ip": "10.0.3.1",  "ttl": 60},
+  "exam.local":    {"ip": "10.0.3.2",  "ttl": 60},
+  "admin.local":   {"ip": "10.0.3.3",  "ttl": 60},
+  "wiki.local":    {"ip": "10.0.3.4",  "ttl": 60}
+}
