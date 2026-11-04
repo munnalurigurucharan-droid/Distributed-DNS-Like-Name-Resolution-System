@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DNS + SDN Dashboard</title>
+<style>
+:root{--bg:#f4f6fb;--card:#fff;--text:#1b2233;--muted:#6b7488;--line:#e3e7f0;--accent:#3b5bdb;--accent-soft:#e7ecff;
+--ok:#2b9348;--ok-soft:#e3f6e8;--bad:#d62839;--bad-soft:#fde7ea;--warn:#e08a00;--warn-soft:#fff1d6}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1420;--card:#171e2e;--text:#e8ecf5;--muted:#8d97ad;--line:#26304a;
+--accent:#7c93ff;--accent-soft:#222c55;--ok:#4cc26e;--ok-soft:#173a25;--bad:#ff6b7a;--bad-soft:#40202a;--warn:#ffb84d;--warn-soft:#3d3018}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 system-ui,Segoe UI,Roboto,sans-serif}
+header{display:flex;align-items:center;gap:12px;padding:16px 24px;background:var(--card);border-bottom:1px solid var(--line);flex-wrap:wrap}
+header h1{font-size:18px;margin:0;font-weight:650}header .sub{color:var(--muted);font-size:13px}
+.pills{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+.pill{padding:4px 10px;border-radius:99px;font-size:12px;font-weight:600;background:var(--bad-soft);color:var(--bad)}
+.pill.on{background:var(--ok-soft);color:var(--ok)}
+main{max-width:1180px;margin:20px auto;padding:0 16px;display:grid;grid-template-columns:1.1fr 1fr;gap:16px}
+@media (max-width:900px){main{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+.card h2{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 12px;font-weight:650}
+.span2{grid-column:1/-1}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+input[type=text]{flex:1;min-width:180px;padding:11px 13px;border:1px solid var(--line);border-radius:10px;font-size:16px;background:var(--bg);color:var(--text)}
+input[type=text]:focus{outline:2px solid var(--accent);border-color:transparent}
+button{border:1px solid var(--line);background:var(--card);color:var(--text);padding:9px 14px;border-radius:10px;font-size:14px;cursor:pointer;font-weight:550}
+button:hover{border-color:var(--accent)}button:disabled{opacity:.5;cursor:wait}
+button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+button.danger{color:var(--bad)}button.small{padding:6px 10px;font-size:13px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0}
+.chip{padding:4px 10px;border-radius:99px;background:var(--accent-soft);color:var(--accent);font-size:13px;cursor:pointer;border:0}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{border:0;border-radius:0;background:transparent;padding:7px 12px;font-size:13px}
+.seg button.active{background:var(--accent);color:#fff}
+label.chk{font-size:13px;color:var(--muted);display:flex;gap:6px;align-items:center}
+.opt{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.opt small{color:var(--muted)}
+#result{margin-top:14px;border-radius:12px;padding:14px 16px;background:var(--bg);border:1px solid var(--line);min-height:92px}
+#result.ok{border-color:var(--ok);background:var(--ok-soft)}#result.bad{border-color:var(--bad);background:var(--bad-soft)}
+#result .ip{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums}
+.meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.tag{font-size:12px;padding:3px 9px;border-radius:99px;background:var(--card);border:1px solid var(--line)}
+.servers{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media (max-width:560px){.servers{grid-template-columns:1fr}}
+.srv{border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--bg)}
+.srv.up{border-color:var(--ok)}.srv.down{border-color:var(--bad)}
+.srv .name{font-weight:650;display:flex;align-items:center;gap:7px}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--bad)}.up .dot{background:var(--ok);box-shadow:0 0 0 3px var(--ok-soft)}
+.srv dl{margin:8px 0;display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:12.5px}
+.srv dt{color:var(--muted)}.srv dd{margin:0;text-align:right;font-variant-numeric:tabular-nums}
+.srv .btns{display:flex;gap:6px;flex-wrap:wrap}
+.hint{font-size:12.5px;color:var(--muted);margin:10px 0 0}
+table{width:100%;border-collapse:collapse;font-size:13px}th{color:var(--muted);text-align:left;font-weight:600;padding:6px 8px;border-bottom:1px solid var(--line)}
+td{padding:6px 8px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+.s-success{color:var(--ok)}.s-timeout,.s-error{color:var(--bad)}.s-not_found{color:var(--warn)}
+.events{font:12.5px/1.6 ui-monospace,Menlo,Consolas,monospace;max-height:230px;overflow:auto}
+.ev{padding:2px 0}.ev b{font-weight:650}.ev.server_down,.ev.client_blocked{color:var(--bad)}.ev.server_up{color:var(--ok)}
+.bars{margin-top:12px}.bar{display:grid;grid-template-columns:80px 1fr 36px;gap:8px;align-items:center;font-size:13px;margin:4px 0}
+.bar div.t{height:14px;background:var(--bg);border-radius:7px;overflow:hidden}.bar div.t i{display:block;height:100%;background:var(--accent)}
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;opacity:0;transition:.2s;pointer-events:none;max-width:90vw}
+#toast.show{opacity:1}
+</style>
+</head>
+<body>
+<header>
+  <div><h1>Distributed DNS + SDN</h1><div class="sub">UDP name resolution · OpenFlow controller · Mininet</div></div>
+  <div class="pills"><span class="pill" id="pMn">Mininet</span><span class="pill" id="pCtl">Controller</span><span class="pill" id="pMode">mode</span></div>
+</header>
+<main>
+  <section class="card">
+    <h2>Lookup</h2>
+    <div class="row">
+      <input type="text" id="domain" placeholder="Type or pick a domain, e.g. example.com" value="example.com" autocomplete="off" spellcheck="false">
+      <button class="primary" id="btnLookup">Resolve</button>
+    </div>
+    <div class="chips" id="chips"></div>
+    <div class="opt">
+      <span class="seg" id="segMode"><button data-v="sdn" class="active">Via SDN (VIP)</button><button data-v="direct">Direct (static)</button></span>
+      <span class="seg" id="segHost"><button data-v="h1" class="active">Client h1</button><button data-v="h5">Client h5</button></span>
+      <label class="chk"><input type="checkbox" id="cache" checked> Use cache</label>
+      <button class="small" id="btnClear">Clear cache</button>
+    </div>
+    <div id="result"><span style="color:var(--muted)">Result appears here.</span></div>
+    <div class="row" style="margin-top:12px">
+      <button id="btnBurst">Send 20 queries</button><small class="hint" style="margin:0">shows how queries are spread across servers</small>
+    </div>
+    <div class="bars" id="bars"></div>
+  </section>
+
+  <section class="card">
+    <h2>Servers (live from the controller)</h2>
+    <div class="servers" id="servers"></div>
+    <p class="hint">Stop a server, or take its link down, then resolve again: the controller detects the failure (~1.5 s) and redirects queries to a healthy server.</p>
+    <h2 style="margin-top:18px">SDN policy</h2>
+    <div class="row">
+      <span class="seg" id="segPolicy"><button data-v="failover">Failover</button><button data-v="roundrobin">Round-robin</button><button data-v="leastloaded">Least-loaded</button></span>
+    </div>
+    <h2 style="margin-top:18px">Attack demo</h2>
+    <div class="row"><button class="danger" id="btnFlood">Flood from h6 (10 s)</button><button id="btnUnblock">Unblock clients</button>
+    <span id="blocked" class="tag" style="display:none"></span></div>
+  </section>
+
+  <section class="card">
+    <h2>Recent lookups</h2>
+    <table><thead><tr><th>Time</th><th>Domain</th><th>Answer</th><th>Server</th><th>ms</th><th></th></tr></thead><tbody id="hist"></tbody></table>
+  </section>
+
+  <section class="card">
+    <h2>Controller events</h2>
+    <div class="events" id="events"></div>
+  </section>
+</main>
+<div id="toast"></div>
+<script>
+const $=s=>document.querySelector(s);
+const state={mode:'sdn',host:'h1',policy:null};
+function toast(m,err){const t=$('#toast');t.textContent=m;t.style.background=err?'var(--bad)':'var(--text)';t.style.color=err?'#fff':'var(--bg)';t.classList.add('show');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('show'),err?9000:3200)}
+async function api(path,body){
+  const r=await fetch(path,body===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const j=await r.json(); if(!r.ok) throw new Error(j.error||r.statusText); return j;}
+function seg(id,key,cb){$(id).addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+  [...$(id).children].forEach(x=>x.classList.toggle('active',x===b));state[key]=b.dataset.v;cb&&cb(b.dataset.v)})}
+seg('#segMode','mode');seg('#segHost','host');
+$('#segPolicy').addEventListener('click',async e=>{const b=e.target.closest('button');if(!b)return;
+  try{await api('/api/policy',{policy:b.dataset.v});toast('Policy: '+b.dataset.v);refresh()}catch(x){toast(x.message)}});
+
+function fmtMs(v){return v<10?v.toFixed(2):v<100?v.toFixed(1):Math.round(v)}
+function showResult(r){
+  const el=$('#result');el.className=r.status==='success'?'ok':'bad';el.textContent='';
+  const add=(tag,cls,txt)=>{const d=document.createElement(tag);if(cls)d.className=cls;d.textContent=txt;el.appendChild(d);return d};
+  if(r.status==='success'){add('div','ip',r.ip);add('div','',r.domain);}
+  else if(r.status==='not_found'){el.className='bad';add('div','ip','Not found');add('div','',r.domain+' does not exist');}
+  else{add('div','ip','No answer');add('div','',r.domain+' – timed out after '+r.attempts+' attempts');}
+  const m=add('div','meta');const tag=t=>{const s=document.createElement('span');s.className='tag';s.textContent=t;m.appendChild(s)};
+  tag(fmtMs(r.latency_ms)+' ms');
+  if(r.cache_hit)tag('cache hit'); else if(r.server)tag('answered by '+r.server);
+  if(!r.cache_hit&&r.attempts)tag('attempts '+r.attempts+(r.timeouts?' · '+r.timeouts+' timeout(s)':''));
+  tag(r.mode==='sdn'?'via SDN VIP':'direct');tag('from '+r.host);
+}
+async function lookup(){
+  const b=$('#btnLookup');b.disabled=true;
+  try{const r=await api('/api/query',{domain:$('#domain').value,host:state.host,mode:state.mode,cache:$('#cache').checked});showResult(r);refresh()}
+  catch(e){toast(e.message,true)}finally{b.disabled=false}}
+$('#btnLookup').onclick=lookup;$('#domain').addEventListener('keydown',e=>{if(e.key==='Enter')lookup()});
+$('#btnClear').onclick=async()=>{await api('/api/clear-cache',{});toast('Cache cleared')};
+$('#btnBurst').onclick=async()=>{const b=$('#btnBurst');b.disabled=true;
+  try{const r=await api('/api/burst',{domain:$('#domain').value,host:state.host,mode:state.mode,n:20});
+    const box=$('#bars');box.textContent='';
+    Object.entries(r.by_server).sort().forEach(([k,v])=>{const d=document.createElement('div');d.className='bar';
+      d.innerHTML='<span></span><div class="t"><i></i></div><b></b>';d.children[0].textContent=k;d.children[1].firstChild.style.width=(100*v/r.n)+'%';d.children[2].textContent=v;box.appendChild(d)});
+    const s=document.createElement('div');s.className='hint';s.textContent='mean '+fmtMs(r.mean_ms)+' ms · max '+fmtMs(r.max_ms)+' ms · failed '+r.failed;box.appendChild(s);refresh()}
+  catch(e){toast(e.message)}finally{b.disabled=false}};
+$('#btnFlood').onclick=async()=>{try{await api('/api/flood',{seconds:10});toast('Flood started from h6')}catch(e){toast(e.message)}};
+$('#btnUnblock').onclick=async()=>{try{await api('/api/unblock',{});toast('Unblocked')}catch(e){toast(e.message)}};
+
+async function srvAction(url,body,msg){try{const r=await api(url,body);toast(r.message||msg)}catch(e){toast(e.message,true)}setTimeout(refresh,400);setTimeout(refresh,2200)}
+function renderServers(c,hosts){
+  const box=$('#servers');box.textContent='';
+  const list=c?c.servers:Object.keys(hosts).map(n=>({name:n,status:'down',qlen:0,rtt_ms:null,assigned:0}));
+  list.forEach(s=>{
+    const d=document.createElement('div');d.className='srv '+s.status;
+    const cnt=c&&c.counters?(c.counters['to_'+s.name]||0):0;
+    d.innerHTML='<div class="name"><span class="dot"></span><span class="n"></span></div><dl><dt>Status</dt><dd class="st"></dd><dt>Host</dt><dd class="h"></dd><dt>Queries routed</dt><dd class="q"></dd><dt>Queue</dt><dd class="ql"></dd><dt>Probe RTT</dt><dd class="r"></dd></dl><div class="btns"></div>';
+    d.querySelector('.n').textContent=s.name;d.querySelector('.st').textContent=s.status.toUpperCase();
+    d.querySelector('.h').textContent=hosts[s.name]+' · '+s.ip;d.querySelector('.q').textContent=cnt;
+    d.querySelector('.ql').textContent=s.qlen;d.querySelector('.r').textContent=s.rtt_ms==null?'–':s.rtt_ms+' ms';
+    const bt=d.querySelector('.btns');
+    [['Stop','stop','danger'],['Start','start',''],['Link ↓','down','danger'],['Link ↑','up','']].forEach(([lab,act,cls])=>{
+      const b=document.createElement('button');b.className='small '+cls;b.textContent=lab;
+      b.onclick=()=>act==='stop'||act==='start'?srvAction('/api/server',{name:s.name,action:act},s.name+': '+act)
+                                                :srvAction('/api/link',{name:s.name,action:act},s.name+' link '+act);
+      bt.appendChild(b)});
+    box.appendChild(d)})}
+function renderHist(h){const tb=$('#hist');tb.textContent='';
+  h.slice().reverse().forEach(r=>{const tr=document.createElement('tr');
+    [r.t,r.domain,r.ip||'–',r.cache_hit?'cache':(r.server||'–'),fmtMs(r.latency_ms),r.status].forEach((v,i)=>{
+      const td=document.createElement('td');td.textContent=v;if(i===5){td.className='s-'+r.status;td.textContent=r.status==='success'?'✓':r.status}tr.appendChild(td)});tb.appendChild(tr)})}
+function renderEvents(ev){const box=$('#events');box.textContent='';
+  ev.slice().reverse().forEach(e=>{const d=document.createElement('div');d.className='ev '+e.event;
+    const t=new Date(e.ts*1000).toLocaleTimeString();const {ts,event,...rest}=e;
+    d.innerHTML='<span></span> <b></b> <span></span>';d.children[0].textContent=t;d.children[1].textContent=event;
+    d.children[2].textContent=Object.entries(rest).map(([k,v])=>k+'='+v).join(' ');box.appendChild(d)})}
+async function refresh(){
+  try{const s=await api('/api/status');const c=s.controller;
+    $('#pMn').className='pill'+(s.mininet?' on':'');$('#pMn').textContent=s.mininet?'Mininet running':'Mininet not found';
+    $('#pCtl').className='pill'+(c?' on':'');$('#pCtl').textContent=c?'Controller connected':'Controller offline';
+    $('#pMode').className='pill on';$('#pMode').textContent=c?('SDN '+c.mode+' · '+c.policy):'–';
+    if(c){[...$('#segPolicy').children].forEach(b=>b.classList.toggle('active',b.dataset.v===c.policy));
+      const bl=Object.keys(c.blocked||{});const el=$('#blocked');el.style.display=bl.length?'':'none';el.textContent='Blocked: '+bl.join(', ');}
+    renderServers(c,s.servers);renderHist(s.history);renderEvents(s.events)}
+  catch(e){$('#pCtl').className='pill';$('#pCtl').textContent='Dashboard offline'}}
+(async()=>{try{const n=(await api('/api/names')).names;n.forEach(x=>{const b=document.createElement('button');b.className='chip';b.textContent=x;
+  b.onclick=()=>{$('#domain').value=x;lookup()};$('#chips').appendChild(b)})}catch(e){}})();
+refresh();setInterval(refresh,1000);
+</script>
+</body>
+</html>
