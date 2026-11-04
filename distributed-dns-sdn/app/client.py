@@ -17,9 +17,11 @@ Usage:
 """
 import argparse
 import collections
+import json
+import os
 import socket
 import time
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from typing import Optional
 
 import dns_common as dc
@@ -147,6 +149,29 @@ class DnsClient:
             sock.close()
 
 
+def load_cache_file(client, path):
+    """Persist the cache between runs of this program (used by the web dashboard)."""
+    try:
+        with open(path) as fh:
+            data = json.load(fh)
+    except (OSError, ValueError):
+        return
+    now, mono = time.time(), time.monotonic()
+    for domain, (status, ip, server, expires) in data.items():
+        if expires > now:
+            client.cache[domain] = (status, ip, server, mono + (expires - now))
+
+
+def save_cache_file(client, path):
+    now, mono = time.time(), time.monotonic()
+    data = {d: [st, ip, srv, now + (exp - mono)]
+            for d, (st, ip, srv, exp) in client.cache.items() if exp > mono}
+    tmp = path + ".tmp"
+    with open(tmp, "w") as fh:
+        json.dump(data, fh)
+    os.replace(tmp, path)
+
+
 def print_result(r):
     if r.status == "success":
         tag = "Cache hit" if r.cache_hit else "Resolution successful"
@@ -167,12 +192,27 @@ def main():
     ap.add_argument("--timeout", type=float, default=1.0)
     ap.add_argument("--no-cache", action="store_true")
     ap.add_argument("--query", help="resolve one name and exit")
+    ap.add_argument("--json", action="store_true", help="print machine-readable JSON (used by the web UI)")
+    ap.add_argument("--burst", type=int, default=0, help="with --query: send N queries, cache off")
+    ap.add_argument("--cache-file", help="load/save the cache from/to this JSON file")
     args = ap.parse_args()
 
-    client = DnsClient(mode=args.mode, timeout=args.timeout, cache=not args.no_cache)
+    client = DnsClient(mode=args.mode, timeout=args.timeout,
+                       cache=not args.no_cache and not args.burst)
+    if args.cache_file and client.cache_enabled:
+        load_cache_file(client, args.cache_file)
 
+    if args.query and args.burst:
+        print(json.dumps([asdict(client.resolve(args.query)) for _ in range(args.burst)]))
+        return
     if args.query:
-        print_result(client.resolve(args.query))
+        result = client.resolve(args.query)
+        if args.cache_file and client.cache_enabled:
+            save_cache_file(client, args.cache_file)
+        if args.json:
+            print(json.dumps(asdict(result)))
+        else:
+            print_result(result)
         return
 
     print(f"DNS client ({args.mode} mode). Commands: <domain> | stats | exit")
