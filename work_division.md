@@ -6,7 +6,7 @@ Topic: Distributed DNS-Like Name Resolution System
 
 
 
-**Person 1 – DNS Core Implementation**
+**Nithya Shree BK – DNS Core Implementation**
 
 1\. Implement UDP-based DNS queries and responses.
 
@@ -18,7 +18,7 @@ Topic: Distributed DNS-Like Name Resolution System
 
 
 
-**Person 2 – Client Reliability \& Performance**
+**Gurucharan – Client Reliability \& Performance**
 
 1\. Implement DNS caching and TTL expiration.
 
@@ -30,7 +30,7 @@ Topic: Distributed DNS-Like Name Resolution System
 
 
 
-**Person 3 – SDN Controller \& Network Management**
+**Naive.G – SDN Controller \& Network Management**
 
 1\. Implement SDN controller and OpenFlow integration.
 
