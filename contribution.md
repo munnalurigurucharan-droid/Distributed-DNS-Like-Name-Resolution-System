@@ -18,7 +18,7 @@ Topic: Distributed DNS-Like Name Resolution System
 
 
 
-**Gurucharan – Client Reliability \& Performance**
+**Naive.G – Client Reliability \& Performance**
 
 1\. Implement DNS caching and TTL expiration.
 
@@ -30,7 +30,7 @@ Topic: Distributed DNS-Like Name Resolution System
 
 
 
-**Naive.G – SDN Controller \& Network Management**
+**M Guru Charan – SDN Controller \& Network Management**
 
 1\. Implement SDN controller and OpenFlow integration.
 
