@@ -14,7 +14,6 @@ Topic: Distributed DNS-Like Name Resolution System
 
 3\. Support multiple DNS resolution servers.
 
-4\. Develop frontend to display DNS servers, domain mappings and query logs.
 
 
 
@@ -26,7 +25,6 @@ Topic: Distributed DNS-Like Name Resolution System
 
 3\. Measure DNS lookup latency.
 
-4\. Develop frontend to display cache status, lookup times and performance charts.
 
 
 
@@ -38,7 +36,6 @@ Topic: Distributed DNS-Like Name Resolution System
 
 3\. Implement dynamic forwarding and load balancing.
 
-4\. Develop frontend to display server status, network topology and request distribution.
 
-All three: Integrate their modules into one application, connect the frontend and backend, and perform final testing.
+**All three**: Integrate their modules into one application, connect the frontend and backend, and perform final testing.
 
